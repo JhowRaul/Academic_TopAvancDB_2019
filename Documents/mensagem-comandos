@@ -1,0 +1,52 @@
+#  Passos
+
+# 1) Salvar (string) Mensagem:id JSON
+SET "Mensagem:1556158247707" "
+    'Mensagem:1556158247707': {
+        'Id': 'Mensagem:1556158247707',
+        'RespostaDe': 'Mensagem:1556158247706',
+        'Data': '1556158247707',
+        'Remetente': 'Jhow',
+        'Destinatarios': [
+            {
+                'Apelido': 'Helena',
+                'Apelido': 'Jane',
+                'Apelido': 'Ketelyn'
+                }
+            ],
+        'Texto': 'Olá Helena, estou sim, e você?'
+    }"
+
+# Cópia do set acima, mas em 1 linha
+SET "Mensagem:1556158247707" "'Mensagem:1556158247707':{'Id':'Mensagem:1556158247707','RespostaDe':'Mensagem:1556158247706','Data':'1556158247707','Remetente':'Jhow','Destinatarios':[{'Apelido':'Helena','Apelido':'Jane','Apelido':'Ketelyn'}],'Texto':'Olá Helena, estou sim, e você?'}"
+
+# Recuperar mensagem
+GET "Mensagem:1556158247707"
+
+# 2) Salvar chave Mensagens:apelido (lista) valores = id de mensagem, id de mensagem, id de mensagem, ... 
+SADD "Mensagens:Helena" "Mensagem:1556158247707"
+SADD "Mensagens:Helena" "Mensagem:1556158247708"
+SADD "Mensagens:Helena" "Mensagem:1556158247709"
+
+# Listar respostas
+SMEMBERS "Mensagens:Helena"
+
+ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:15561582477010"
+ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:1556158247708"
+ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:1556158247709"
+ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:1556158247710"
+
+# Listar respostas ordenadamente asc
+ZRANGE "Res:Mensagem:1556158247707" 0 -1
+
+# Listar respostas ordenadamente desc
+ZREVRANGE "Res:Mensagem:1556158247707" 0 -1
+
+# Número de respostas da mensagem
+ZCARD "Res:Mensagem:1556158247707"
+
+# Remover da lista de respostas
+ZREM "Res:Mensagem:1556158247707" "Mensagem:15561582477010"
+
+# Excluir lista de respostas
+DEL "Res:Mensagem:1556158247707"

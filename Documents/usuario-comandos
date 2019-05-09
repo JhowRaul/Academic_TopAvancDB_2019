@@ -1,0 +1,32 @@
+# Buscar na lista: Retorna 1 para "Tem" e 0 para "Não tem"
+SISMEMBER "Usuario" "Jhow"
+
+# Listar usuários
+SMEMBERS Usuario
+
+# Inserir na lista
+SADD "Usuario" "Jhow"
+
+# Alterar na lista
+
+# Excuir da lista
+SREM "Usuario" "Jhow"
+
+# Inserir / alterar no hash
+HSET "Usuario:Jhow" "Apelido" "Jhow"
+HSET "Usuario:Jhow" "Nome" "Jhonatan Raul Krautczuk"
+HSET "Usuario:Jhow" "Cadastro" "1556158247707"
+
+# Verificar a existência do hash
+EXISTS "Usuario:Jhow"
+
+# Verificar a existência da subchave no hash
+HEXISTS "Usuario:Jhow" "Apelido"
+
+# Buscar no hash
+HGET "Usuario:Jhow" "Apelido"
+HGET "Usuario:Jhow" "Nome"
+HGET "Usuario:Jhow" "Cadastro"
+
+# Excluir subchave no hash
+HDEL "Usuario:Jhow" "Nome"

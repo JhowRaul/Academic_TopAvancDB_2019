@@ -1,0 +1,27 @@
+/*
+   Um arquivo JSON com o modelo dos dados das mensagens
+     Mensagem - Deve ser guardado um texto da mensagem, bem como a data e hora de
+     envio da mesma e o usuário que a escreveu
+     
+     15561582477... = Timestamp
+*/
+{
+    'Mensagem:1556158247707': {
+        'Id': 'Mensagem:1556158247707',
+        'RespostaDe': 'Mensagem:1556158247706',
+        'Data': '1556158247707',
+        'Remetente': 'Jhow',
+        'Destinatarios': [
+            {
+                'Apelido': 'Helena',
+                'Apelido': 'Jane',
+                'Apelido': 'Ketelyn'
+            }
+        ],
+        'Texto': 'Olá Helena, estou sim, e você?'
+    },
+
+    'Mensagens:Helena': ['Mensagem:1556158247707', 'Mensagem:1556158247708', 'Mensagem:1556158247709'],
+
+    'Res:Mensagem:1556158247707': ['Mensagem:1556158247708', 'Mensagem:1556158247709', 'Mensagem:1556158247710']
+}

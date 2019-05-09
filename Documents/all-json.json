@@ -1,0 +1,29 @@
+{
+
+    "Usuario": ["Jhow", "Julien", "Jane"],
+
+    "Usuario:Jhow": {
+        "Apelido": "Jhow",
+        "Nome": "Jhonatan Raul Krautczuk",
+        "Cadastro": "1556158247707"
+    },
+
+    "Mensagem:1556158247707": {
+        "Id": "Mensagem:1556158247707",
+        "RespostaDe": "Mensagem:1556158247706",
+        "Data": "1556158247707",
+        "Remetente": "Jhow",
+        "Destinatarios": [
+            {
+                "Apelido": "Helena",
+                "Apelido": "Jane",
+                "Apelido": "Ketelyn"
+            }
+        ],
+        "Texto": "Olá Helena, estou sim, e você?"
+    },
+
+    "Mensagens:Helena": ["Mensagem:1556158247707", "Mensagem:1556158247708", "Mensagem:1556158247709"],
+
+    "Res:Mensagem:1556158247707": ["Mensagem:1556158247708", "Mensagem:1556158247709", "Mensagem:1556158247710"]
+}

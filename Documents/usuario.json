@@ -1,0 +1,21 @@
+/* 
+   Um arquivo JSON com o modelo dos dados do usuário
+     Usuário - Cada usuário deve possuir um apelido único no sistema, deve ser persistido
+     também o nome completo do mesmo e a data na qual ele se cadastrou no sistema
+     
+     em Javascript: Date.now(); retorna 1556158247707
+     new Date(1556158247707); retorna a data formatada desse ponto no tempo
+   
+   Para python:
+   https://www.w3schools.com/python/showpython.asp?filename=demo_datetime1
+*/
+{
+
+    'Usuario': ['Jhow', 'Julien', 'Jane'],
+
+    'Usuario:Jhow': {
+        'Apelido': 'Jhow',
+        'Nome': 'Jhonatan Raul Krautczuk',
+        'Cadastro': '1556158247707'
+    }
+}
