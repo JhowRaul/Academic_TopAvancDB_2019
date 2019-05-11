@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from .dao import UsuarioDao
 from .form import loginForm, novoUsuarioForm
 import redis
@@ -46,19 +48,19 @@ def novo(request):
             dao.item_hash(apelido=apelido).hset('nome', nome)
             dao.item_hash(apelido=apelido).hset('cadastro', time.strftime("%d/%m/%Y"))
             data['result'] = "Usuário cadastrado com sucesso."
-            # Criar view com variavel no link para abrir painel: /painel?u={apelido}
-            # Nessa requisição da linha 51 enviar variável result
-            return redirect('url_painel')
+
+            return HttpResponseRedirect(reverse('url_painel', args=[apelido]))
         else:
             print("Falha no registro")
             data['result'] = "Usuário já existe"
             return render(request, 'usuario/novo.html', data);
 
-    # data['now'] = datetime.datetime.now()
     return render(request, 'usuario/novo.html', data);
 
-def painel(request):
+def painel(request, apelido):
     data= {}
 
+    print(apelido)
+    data['apelido'] = apelido
     data['now'] = datetime.datetime.now()
     return render(request, 'painel/home.html', data);

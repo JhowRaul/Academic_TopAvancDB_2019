@@ -18,7 +18,7 @@ from django.urls import path
 from mensagens.views import login, novo, painel
 
 urlpatterns = [
-    path('painel/', painel, name='url_painel'),
+    path('painel/<slug:apelido>', painel, name='url_painel'),
     path('login/', login, name='url_login'),
     path('novo/', novo, name='url_novo'),
 ]
