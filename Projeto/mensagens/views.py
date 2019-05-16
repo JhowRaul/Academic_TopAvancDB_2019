@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -21,9 +23,9 @@ def login(request):
     form = loginForm(request.POST or None)
 
     if form.is_valid():
-        return redirect('url_painel')
+        apelido =  form.cleaned_data['apelido']
+        return redirect('url_painel', apelido=apelido)
 
-    # data['now'] = datetime.datetime.now()
     data['form'] = form
     return render(request, 'usuario/login.html', data);
 
@@ -49,7 +51,7 @@ def novo(request):
             dao.item_hash(apelido=apelido).hset('cadastro', time.strftime("%d/%m/%Y"))
             data['result'] = "Usuário cadastrado com sucesso."
 
-            return HttpResponseRedirect(reverse('url_painel', args=[apelido]))
+            return redirect('url_painel', apelido=apelido)
         else:
             print("Falha no registro")
             data['result'] = "Usuário já existe"
@@ -59,8 +61,15 @@ def novo(request):
 
 def painel(request, apelido):
     data= {}
-
-    print(apelido)
     data['apelido'] = apelido
     data['now'] = datetime.datetime.now()
-    return render(request, 'painel/home.html', data);
+
+    client = redis.StrictRedis(HOSTNAME, PORT)
+    dao = UsuarioDao(client)
+
+    keys, result = dao.item_set.smembers_mget()
+    if apelido.encode() in keys:
+        return render(request, 'painel/home.html', data);
+    else:
+        data['result'] = 'Usuário não está cadastrado.'
+        return redirect('url_login')
