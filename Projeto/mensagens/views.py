@@ -3,11 +3,13 @@ from __future__ import unicode_literals
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .dao import UsuarioDao
-from .form import loginForm, novoUsuarioForm
+from .dao import UsuarioDao, MensagemDao
+from .form import loginForm, novoUsuarioForm, formNovaMsg
 import redis
 from nose.tools import ok_, eq_, raises
 from gxredis import *
+from datetime import datetime
+from uuid import uuid4
 
 import datetime
 import time
@@ -70,6 +72,52 @@ def painel(request, apelido):
     keys, result = dao.item_set.smembers_mget()
     if apelido.encode() in keys:
         return render(request, 'painel/home.html', data);
+    else:
+        data['result'] = 'Usuário não está cadastrado.'
+        return redirect('url_login')
+
+def novaMsg(request, apelido):
+    data = {}
+    data['apelido'] = apelido
+
+    formNova = formNovaMsg(request.POST or None)
+    data['formNovaMsg'] = formNova
+
+    client = redis.StrictRedis(HOSTNAME, PORT)
+    dao = UsuarioDao(client)
+
+    keys, result = dao.item_set.smembers_mget()
+    if apelido.encode() in keys:
+        if formNova.is_valid():
+            dao2 = MensagemDao(client)
+
+            data = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+            id = "mensagem:" + data
+            remetente = apelido
+            destinatarios = formNova.cleaned_data['destinatarios']
+            texto = formNova.cleaned_data['texto']
+
+            print(id)
+            print(data)
+            print(remetente)
+            print(destinatarios)
+            print(texto)
+
+            # Inserir JSON de mensagem completa
+            # result = dao2.item(id=id).sadd()
+
+            if result == 1:
+                # Criar loop para enviar para todos os destinatarios
+                # dao2.item_set(apelido=destinatario1).sadd(id)
+                # dao2.item_set(apelido=destinatario2).sadd(id)
+                # dao2.item_set(apelido=destinatario3).sadd(id)
+                return redirect('url_painel', apelido=apelido)
+            else:
+                print("Falha no envio")
+                data['result'] = "Falha no envio"
+                return render(request, 'usuario/novo.html', data);
+
+        return render(request, 'painel/nova-msg.html', data);
     else:
         data['result'] = 'Usuário não está cadastrado.'
         return redirect('url_login')
