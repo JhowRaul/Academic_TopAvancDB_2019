@@ -15,9 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from mensagens.views import login, novo, painel, novaMsg
+from mensagens.views import login, novo, painel, novaMsg, mensagem
 
 urlpatterns = [
+    path('painel/<slug:apelido>/<slug:mensagem>', mensagem, name='url_mensagem'),
     path('painel/<slug:apelido>', painel, name='url_painel'),
     path('painel/<slug:apelido>/nova', novaMsg, name='url_nova_msg'),
     path('painel/<slug:apelido>/resposta', painel, name='url_nova_resposta'),

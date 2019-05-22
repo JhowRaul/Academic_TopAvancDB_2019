@@ -79,9 +79,12 @@ def painel(request, apelido):
         ids, mensagens = dao2.item_set.smembers_mget()
 
         for elem in ids:
-            listaMensagem.append(str(elem, 'utf-8'))
+            elemNovo = str(elem, 'utf-8').replace(':', '-')
+            listaMensagem.append(elemNovo)
 
         data['mensagens'] = listaMensagem
+
+
         return render(request, 'painel/home.html', data);
     else:
         data['result'] = 'Usuário não está cadastrado.'
@@ -144,4 +147,28 @@ def novaMsg(request, apelido):
         return render(request, 'painel/nova-msg.html', data);
     else:
         data['result'] = 'Usuário não está cadastrado.'
+        return redirect('url_login')
+
+def mensagem(request, apelido, mensagem):
+    data = {}
+    data['apelido'] = apelido
+    data['mensagem'] = mensagem
+
+    mensagemDois = mensagem.replace('-', ':')
+    data['mensagemDois'] = mensagemDois
+
+    client = redis.StrictRedis(HOSTNAME, PORT)
+    dao = UsuarioDao(client)
+    dao2 = MensagemDao(client, key_params={"id": mensagemDois, "apelido": apelido})
+
+    keys, result = dao.item_set.smembers_mget()
+    mensagemGet = dao2.item(id=mensagemDois).get()
+    if apelido.encode() in keys:
+        if mensagemGet != None:
+            msg = json.loads(str(mensagemGet, 'utf-8'))
+            data['mensagemGet'] = msg
+            return render(request, 'painel/mensagem.html', data);
+        else:
+            return redirect('url_painel', apelido=apelido)
+    else:
         return redirect('url_login')
