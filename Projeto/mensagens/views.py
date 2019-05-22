@@ -10,6 +10,7 @@ from nose.tools import ok_, eq_, raises
 from gxredis import *
 from datetime import datetime
 from uuid import uuid4
+import json
 
 import datetime
 import time
@@ -71,6 +72,16 @@ def painel(request, apelido):
 
     keys, result = dao.item_set.smembers_mget()
     if apelido.encode() in keys:
+        # Recuperar mensagens recebidas
+        dao2 = MensagemDao(client, key_params={"apelido": apelido})
+
+        listaMensagem = []
+        ids, mensagens = dao2.item_set.smembers_mget()
+
+        for elem in ids:
+            listaMensagem.append(str(elem, 'utf-8'))
+
+        data['mensagens'] = listaMensagem
         return render(request, 'painel/home.html', data);
     else:
         data['result'] = 'Usuário não está cadastrado.'
@@ -89,7 +100,6 @@ def novaMsg(request, apelido):
     keys, result = dao.item_set.smembers_mget()
     if apelido.encode() in keys:
         if formNova.is_valid():
-            dao2 = MensagemDao(client)
 
             data = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
             id = "mensagem:" + data
@@ -97,24 +107,38 @@ def novaMsg(request, apelido):
             destinatarios = formNova.cleaned_data['destinatarios']
             texto = formNova.cleaned_data['texto']
 
-            print(id)
-            print(data)
-            print(remetente)
-            print(destinatarios)
-            print(texto)
+            # Tranformando destinatarios em lista
+            destSplit = destinatarios.split()
+            dest = []
 
-            # Inserir JSON de mensagem completa
-            # result = dao2.item(id=id).sadd()
+            for elem in destSplit:
+                if elem.encode() in keys:
+                    dest.append(elem)
+                else:
+                    print(elem + " não cadastrado.")
+
+            # Criando mensagem completa
+            msg = {'id':id,'remetente':remetente,'destinatarios':dest,'texto':texto,'data':data}
+
+            # Tranformando mensagem em json
+            msgJSON = json.dumps(msg)
+
+            # Salvando JSON de mensagem completa
+            dao2 = MensagemDao(client, key_params={"id": id, "apelido": apelido})
+            result = dao2.item(id=id).set(msgJSON)
+
+            teste = dao2.item(id=id).get()
+            print(teste)
 
             if result == 1:
-                # Criar loop para enviar para todos os destinatarios
-                # dao2.item_set(apelido=destinatario1).sadd(id)
-                # dao2.item_set(apelido=destinatario2).sadd(id)
-                # dao2.item_set(apelido=destinatario3).sadd(id)
+                # Loop para enviar para todos os destinatarios
+                for elem in dest:
+                    dao2.item_set(apelido=elem).sadd(id)
+
                 return redirect('url_painel', apelido=apelido)
             else:
                 print("Falha no envio")
-                data['result'] = "Falha no envio"
+                # data['result'] = "Falha no envio"
                 return render(request, 'usuario/novo.html', data);
 
         return render(request, 'painel/nova-msg.html', data);

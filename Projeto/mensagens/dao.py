@@ -8,5 +8,5 @@ class UsuarioDao(RedisDao):
     item_hash = RedisHash(key="usuario:{apelido}")
 
 class MensagemDao(RedisDao):
+    item = RedisString(key="{id}")
     item_set = RedisSet(key="mensagens:{apelido}")
-    item = RedisString(key="mensagem:{id}")
