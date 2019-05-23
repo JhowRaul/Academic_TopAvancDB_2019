@@ -9,4 +9,6 @@ class UsuarioDao(RedisDao):
 
 class MensagemDao(RedisDao):
     item = RedisString(key="{id}")
-    item_set = RedisSet(key="mensagens:{apelido}")
+    item_set = RedisSet(key="recebidas:{apelido}")
+    item_set_env = RedisSet(key="enviadas:{apelido}")
+    item_zset = RedisSortedSet(key="res:{id}")

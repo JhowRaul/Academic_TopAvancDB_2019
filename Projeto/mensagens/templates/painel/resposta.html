@@ -16,23 +16,16 @@
         <div class="row">
             <div class="col-sm-6">
 
-                <h2>Mensagem {{ mensagemDois }} </h2>
+                <h3>Nova resposta de {{ apelido }} para <a href="{% url 'url_mensagem' apelido mensagem %}">{{ mensagem }}</a></h3>
                 <br>
 
-                Data: {{ mensagemGet.data }}<br>
-                De: {{ mensagemGet.remetente }}<br>
-                Para: {{ mensagemGet.destinatarios }}<br><br>
-                Mensagem: <br>{{ mensagemGet.texto }}<br>
-                <br>
-
-                Respostas:<br>
-                {% for mensagem in respostas %}
-                     <a href="{% url 'url_mensagem' apelido mensagem %}">{{ mensagem }}</a> <br>
-                {% endfor %}
-
+                <form method="post">
+                    {% csrf_token %}
+                    {{ formResposta.as_p }}
+                    <button type="submit">Entrar</button>
+                </form>
 
                 <br>
-                <a href="{% url 'url_nova_resposta' apelido mensagem %}">Responder</a> <br>
                 <a href="{% url 'url_painel' apelido %}">Voltar ao painel</a>
 
             </div>

@@ -39,3 +39,8 @@ class formNovaMsg(ModelForm):
     class Meta:
         model = Mensagem
         fields = ['destinatarios', 'texto']
+
+class formRespostaMsg(ModelForm):
+    class Meta:
+        model = Mensagem
+        fields = ['texto']

@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .dao import UsuarioDao, MensagemDao
-from .form import loginForm, novoUsuarioForm, formNovaMsg
+from .form import loginForm, novoUsuarioForm, formNovaMsg, formRespostaMsg
 import redis
 from nose.tools import ok_, eq_, raises
 from gxredis import *
@@ -76,7 +76,10 @@ def painel(request, apelido):
         dao2 = MensagemDao(client, key_params={"apelido": apelido})
 
         listaMensagem = []
+        listaMensagemEnv = []
         ids, mensagens = dao2.item_set.smembers_mget()
+
+        idsEnv, mensagensEnv = dao2.item_set_env.smembers_mget()
 
         for elem in ids:
             elemNovo = str(elem, 'utf-8').replace(':', '-')
@@ -84,6 +87,11 @@ def painel(request, apelido):
 
         data['mensagens'] = listaMensagem
 
+        for elem in idsEnv:
+            elemNovo = str(elem, 'utf-8').replace(':', '-')
+            listaMensagemEnv.append(elemNovo)
+
+        data['mensagensEnv'] = listaMensagemEnv
 
         return render(request, 'painel/home.html', data);
     else:
@@ -104,8 +112,9 @@ def novaMsg(request, apelido):
     if apelido.encode() in keys:
         if formNova.is_valid():
 
-            data = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-            id = "mensagem:" + data
+            dataa = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+            dataId = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+            id = "mensagem:" + dataId
             remetente = apelido
             destinatarios = formNova.cleaned_data['destinatarios']
             texto = formNova.cleaned_data['texto']
@@ -121,7 +130,7 @@ def novaMsg(request, apelido):
                     print(elem + " não cadastrado.")
 
             # Criando mensagem completa
-            msg = {'id':id,'remetente':remetente,'destinatarios':dest,'texto':texto,'data':data}
+            msg = {'id':id,'remetente':remetente,'destinatarios':dest,'texto':texto,'data':dataa}
 
             # Tranformando mensagem em json
             msgJSON = json.dumps(msg)
@@ -138,11 +147,14 @@ def novaMsg(request, apelido):
                 for elem in dest:
                     dao2.item_set(apelido=elem).sadd(id)
 
+                # Salvando para ler enviadas
+                dao2.item_set_env(apelido=apelido).sadd(id)
+
                 return redirect('url_painel', apelido=apelido)
             else:
                 print("Falha no envio")
                 # data['result'] = "Falha no envio"
-                return render(request, 'usuario/novo.html', data);
+                return redirect('url_painel', apelido=apelido)
 
         return render(request, 'painel/nova-msg.html', data);
     else:
@@ -167,8 +179,107 @@ def mensagem(request, apelido, mensagem):
         if mensagemGet != None:
             msg = json.loads(str(mensagemGet, 'utf-8'))
             data['mensagemGet'] = msg
-            return render(request, 'painel/mensagem.html', data);
+
+            if msg['remetente'] == apelido or apelido in msg['destinatarios']:
+                redisClient = redis.StrictRedis(host=HOSTNAME, port=PORT)
+                respostas = redisClient.zrange(mensagem, 0, -1)
+
+                listRespostas = []
+                for elem in respostas:
+                    elemOk = str(elem, 'utf-8').replace(':', '-')
+                    listRespostas.append(elemOk)
+
+                data['respostas'] = listRespostas
+
+                return render(request, 'painel/mensagem.html', data)
+            else:
+                print("Essa mensagem não é de " + apelido)
+                return redirect('url_painel', apelido=apelido)
         else:
             return redirect('url_painel', apelido=apelido)
     else:
         return redirect('url_login')
+
+def responder(request, apelido, mensagem):
+    formResposta = formRespostaMsg(request.POST or None)
+    data = {}
+    data['formResposta'] = formResposta
+    data['apelido'] = apelido
+    data['mensagem'] = mensagem
+
+    if formResposta.is_valid():
+        client = redis.StrictRedis(HOSTNAME, PORT)
+        dao = UsuarioDao(client)
+        dao2 = MensagemDao(client, key_params={"id": mensagem, "apelido": apelido})
+
+        keys, result = dao.item_set.smembers_mget()
+        if apelido.encode() in keys:
+            mensagemDois = mensagem.replace('-', ':')
+            mensagemGet = dao2.item(id=mensagemDois).get()
+            if mensagemGet != None:
+                msg = json.loads(str(mensagemGet, 'utf-8'))
+                data['mensagemGet'] = msg
+                print("Antiga: ")
+                print(msg)
+
+                if msg['remetente'] == apelido or apelido in msg['destinatarios']:
+                    dataa = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+                    dataId = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+                    id = "mensagem:" + dataId
+                    remetente = apelido
+                    destinatarios = []
+                    texto = formResposta.cleaned_data['texto']
+
+                    # Tranformando destinatarios em lista
+                    for elem in msg['destinatarios']:
+                        if elem.encode() in keys:
+                            if elem != apelido:
+                                destinatarios.append(elem)
+                        else:
+                            print(elem + " não cadastrado.")
+
+                    destinatarios.append(msg['remetente'])
+
+                    # Criando mensagem completa
+                    msgNova = {'id': id, 'remetente': remetente, 'destinatarios': destinatarios, 'respostaDe': mensagem, 'texto': texto, 'data': dataa}
+
+                    # Tranformando mensagem em json
+                    msgJSON = json.dumps(msgNova)
+
+                    # Salvando JSON de mensagem completa
+                    dao3 = MensagemDao(client, key_params={"id": id, "apelido": apelido})
+                    result = dao3.item(id=id).set(msgJSON)
+
+                    teste = dao3.item(id=id).get()
+                    print("Nova")
+                    print(teste)
+
+                    if result == 1:
+                        # Loop para enviar para todos os destinatarios
+                        for elem in destinatarios:
+                            dao3.item_set(apelido=elem).sadd(id)
+
+                        # Salvando para ler enviadas
+                        dao3.item_set_env(apelido=apelido).sadd(id)
+
+                        redisClient = redis.StrictRedis(host=HOSTNAME, port=PORT)
+                        # Salvando para ler respostas
+                        numRespostas = redisClient.zcard(mensagem)
+                        numRespostas += 1
+                        redisClient.zadd(mensagem, {id: numRespostas})
+
+                        return redirect('url_painel', apelido=apelido)
+                    else:
+                        print("Falha no envio")
+                        # data['result'] = "Falha no envio"
+                        return redirect('url_painel', apelido=apelido)
+                else:
+                    print("Essa mensagem não é de " + apelido + ', portanto não pode responde-la.')
+                    return redirect('url_painel', apelido=apelido)
+            else:
+                # Mensagem não encontrada
+                return redirect('url_painel', apelido=apelido)
+        else:
+            return redirect('url_login')
+
+    return render(request, 'painel/resposta.html', data)

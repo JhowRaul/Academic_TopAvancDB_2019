@@ -31,10 +31,13 @@ SADD "Mensagens:Helena" "Mensagem:1556158247709"
 # Listar respostas
 SMEMBERS "Mensagens:Helena"
 
+# Número de respostas
+ZCARD "Res:Mensagem:1556158247707"
+
 ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:15561582477010"
-ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:1556158247708"
-ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:1556158247709"
-ZADD "Res:Mensagem:1556158247707" 1 "Mensagem:1556158247710"
+ZADD "Res:Mensagem:1556158247707" 2 "Mensagem:1556158247708"
+ZADD "Res:Mensagem:1556158247707" 3 "Mensagem:1556158247709"
+ZADD "Res:Mensagem:1556158247707" 4 "Mensagem:1556158247710"
 
 # Listar respostas ordenadamente asc
 ZRANGE "Res:Mensagem:1556158247707" 0 -1
